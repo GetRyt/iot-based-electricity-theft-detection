@@ -1,0 +1,111 @@
+PROGRAM:
+//Header File
+#include<LiquidCrystal.h>
+LiquidCrystal lcd(2,3,4,5,6,7);
+//Voltage Sensor
+int vol = A2;
+int volt= 0;
+//Current Sensor
+#include "EmonLib.h" 
+EnergyMonitor emon1; 
+EnergyMonitor emon2;
+//Relay and Buzzer
+int relay = 12;
+int buz = 13;
+int incomingByte = 0;
+void setup() {
+ // put your setup code here, to run once:
+ pinMode(vol, INPUT);
+ pinMode(relay, OUTPUT);
+ pinMode(buz, OUTPUT);
+ 
+ Serial.begin(9600);
+ 
+ emon1.current(A1, 111.1); 
+ emon2.current(A2, 111.1); 
+ lcd.begin(16, 2);
+ lcd.setCursor(0,0);
+ lcd.print("IOT SMART METER ");
+ lcd.setCursor(0,1);
+ lcd.print("");
+ delay(1500);
+ digitalWrite(buz, HIGH);
+41
+ delay(500);
+ lcd.clear();
+ digitalWrite(buz, LOW);
+}
+void loop() {
+ // put your main code here, to run repeatedly:
+ volt = analogRead(vol);
+ volt = volt/2;
+ double Irms1 = emon1.calcIrms(1480); // Calculate Irms only
+ double Irms2 = emon2.calcIrms(1480);
+ lcd.setCursor(0,0);
+ lcd.print("V:");
+ lcd.print(volt);
+ lcd.print(" "); 
+ lcd.setCursor(8,0);
+ lcd.print("I:");
+ lcd.print(Irms1);
+ lcd.print(" ");
+ Serial.print("123");
+ Serial.print(" ");
+ Serial.print(volt);
+ Serial.print(" ");
+ Serial.print(Irms1);
+ Serial.print(" ");
+ Serial.println(Irms2);
+ delay(500);
+ serialdata();
+}
+void serialdata()
+{
+ if(Serial.available() > 0)
+ {
+ incomingByte = Serial.read();
+ }
+ 
+42
+ switch(incomingByte)
+ {
+ // Auto OFF
+ case '1':
+ digitalWrite(buz, HIGH);
+ delay(2000);
+ digitalWrite(buz, LOW);
+ digitalWrite(relay, HIGH);
+ lcd.setCursor(0,1);
+ lcd.print("OVER DUE - AUTO OFF");
+ incomingByte='*';
+ break;
+ // Auto ON
+ case '2': 
+ digitalWrite(buz, HIGH);
+ delay(2000);
+ digitalWrite(buz, LOW);
+ digitalWrite(relay, LOW);
+ lcd.setCursor(0,1);
+ lcd.print("BILL PAID - AUTO ON");
+ incomingByte='*';
+ break;
+ // Mannual OFF
+ case '3': 
+ digitalWrite(buz, HIGH);
+ delay(2000);
+ digitalWrite(buz, LOW);
+ digitalWrite(relay, HIGH);
+ lcd.setCursor(0,1);
+ lcd.print("OVER DUE - CURNT OFF");
+ incomingByte='*';
+ break;
+ // Manaual ON
+ case '4': 
+ digitalWrite(buz, HIGH);
+ delay(2000);
+ digitalWrite(buz, LOW);
+ digitalWrite(relay, LOW);
+ lcd.setCursor(0,1);
+ lcd.print("BILL PAID - AUTO ON");
+ incomingByte='*';
+ break;}
